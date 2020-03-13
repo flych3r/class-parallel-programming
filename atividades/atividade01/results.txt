@@ -1,0 +1,14 @@
+mtxMultSerial:
+  real    1m34,859s
+  user    1m34,737s
+  sys     0m0,097s
+
+mtxMultParallelNoCollapse:
+  real    0m40,144s
+  user    2m32,294s
+  sys     0m0,196s
+
+mtxMultParallel2Collapse:
+  real    0m39,927s
+  user    2m31,873s
+  sys     0m0,216s
