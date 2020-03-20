@@ -1,14 +1,16 @@
+# Intel i7-7500U (4) @ 3.500GHz, 8 GB RAM
+
 mtxMultSerial:
-  real    1m34,859s
-  user    1m34,737s
-  sys     0m0,097s
+  real	1m33,870s
+  user	1m33,782s
+  sys	0m0,081s
 
 mtxMultParallelNoCollapse:
-  real    0m40,144s
-  user    2m32,294s
-  sys     0m0,196s
+  real	0m39,208s
+  user	2m32,721s
+  sys	0m0,108s
 
 mtxMultParallel2Collapse:
-  real    0m39,927s
-  user    2m31,873s
-  sys     0m0,216s
+  real	0m39,118s
+  user	2m33,727s
+  sys	0m0,072s

@@ -12,7 +12,7 @@ double **mtxMul(double **c, double **a, double **b, int n)
                 c[i][j] = c[i][j] + a[i][k] * b[k][j];
         }
     }
-    return c;
+    return 0;
 }
 
 void print_matrix(double **mtx, int n)
