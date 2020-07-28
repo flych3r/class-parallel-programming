@@ -24,11 +24,13 @@ int main (int argc , char *argv[]) {
                 int j = 0;
                 hi = j + i;
                 while (j < chunk && hi <= max) {
-                    printf("thread: %d, lo: %d, hi: %d \n", t, lo, hi);
                     sums[t] = sums[t] + hi;
                     j++;
                     hi = j + i;
                 }
+                hi--;
+                if(hi <= max)
+                    printf("thread: %d, lo: %d, hi: %d \n", t, i, hi);
             }
         }
     int sum = 0;

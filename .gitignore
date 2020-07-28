@@ -1,3 +1,6 @@
-.vscode
 *.bin
+*.o
 *.out
+*.ipynb
+.ipynb_checkpoints
+.vscode
