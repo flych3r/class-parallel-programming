@@ -1,0 +1,9 @@
+Arquivo: jacobi_unrolling_parallel.c
+Dimensão: 400
+Iterações: 40000
+
+Número de Cores       Tempo de Execução
+1                     49.009s    
+2                     25.048s
+4                     13.505s
+8                     6.841s
