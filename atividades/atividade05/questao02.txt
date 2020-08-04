@@ -1,0 +1,7 @@
+# Core i7-7500U
+# Processos    Tempo
+1              2.312343 seconds
+2              1.206812 seconds
+4              0.908061 seconds
+6              0.994683 seconds
+8              0.937467 seconds
