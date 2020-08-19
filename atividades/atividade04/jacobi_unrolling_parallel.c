@@ -1,3 +1,4 @@
+// Correção: OK. 2,5 Pontos.
 /*
     Loop unrolling.
 */
