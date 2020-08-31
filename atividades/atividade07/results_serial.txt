@@ -1,0 +1,6 @@
+# Core i5 i7-7500U
+# N     Tempo mtxMult       Tempo mtxMult_linemajor
+64      0m0,004s            0m0,008s
+256     0m0,147s            0m0,065s
+1024    0m14,366s           0m4,113s
+2048    2m47,269s           0m31,636s
