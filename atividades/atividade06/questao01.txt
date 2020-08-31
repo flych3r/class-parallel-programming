@@ -1,0 +1,8 @@
+# Core i7-7500U
+# N = 1024 * 1024
+# Processos    Tempo MPI_Allreduce  Tempo sem MPI_Allreduce
+1                   0m0,427s                   0m0,422s
+2                   0m0,399s                   0m0,445s
+4                   0m0,517s                   0m0,473s
+6                   0m0,516s                   0m0,521s
+8                   0m0,574s                   0m0,571s
