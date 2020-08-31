@@ -1,3 +1,4 @@
+// Correção: OK. 1,0 ponto.
 #include <stdlib.h>
 #include <stdio.h>
 #include <omp.h>

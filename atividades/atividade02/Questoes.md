@@ -1,3 +1,4 @@
+# Correção: Parcial. Observações abaixo. 2,3 Pontos.
 # Computação Paralela - Atividade 02
 
 ## Matheus Xavier Sampaio – 397710
@@ -10,15 +11,19 @@ Suponha que duas matrizes 100 x 100 são multiplicadas usando 8 threads. Quantos
 
 Apenas o laço externo é paralelizado, sendo assim, o numero de iterações a serem distribuídas é 100 (100 / 8, 100 % 8 = 12, 4).
 Logo cada thread executa 1200 operações, restando assim 400 operações, sendo essas distribuídas entre 4 threads, 100 para cada .
+*Correção: você só precisa ressaltar que ainda existem as iterações do laço mais interno.*
 
     2. A diretiva collapse(2) é aplicada ao laço mais externo:
 
 Como ambos os laços são paralelizados, o numero de iterações a serem distribuídas é 100 * 100 (10000 / 8 = 1250).
-Logo cada thread executa 1250 operações
+Logo cada thread executa 1250 operações.
+*Correção: você só precisa ressaltar que ainda existem as iterações do laço mais interno.*
 
     3. Ativando regiões paralelas aninhadas e OMP_NUM_THREADS=2,4.
 
 Considerando que o primeiro laço é dividido em 2 threads (100 / 2 = 50), e destes, o segundo laço é dividido em 4 threads (100 / 4 = 25), esta divisão resulta em 25 * 50 operações (1250) para cada thread. O que muda é em relação ao collapse(2) é qual operação cada thread  realiza.
+
+*Correção: você só precisa ressaltar que ainda existem as iterações do laço mais interno.*
 
 ### Questão 02
 
