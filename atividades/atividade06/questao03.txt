@@ -1,0 +1,11 @@
+# Média entre 5 execuções
+
+# Single
+# Processos    Tempo
+1              0.010385 seconds
+2              0.007887 seconds
+4              0.005380 seconds
+6              0.004224 seconds
+8              0.0240714 seconds
+
+obs: Para #P = 8, o desvio padrão foi 0.03178, com máximo de 0.086872 e mínimo de 0.003213
