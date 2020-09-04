@@ -8,4 +8,13 @@
 6              0.004224 seconds
 8              0.0240714 seconds
 
-obs: Para #P = 8, o desvio padrão foi 0.03178, com máximo de 0.086872 e mínimo de 0.003213
+obs:    Para #P = 8, ocorreu variações no tempo de execução
+        O desvio padrão foi 0.03178, com máximo de 0.086872 e mínimo de 0.003213
+
+# Cluster
+# Processos    Tempo
+1              0.010160 seconds
+2              0.007611 seconds
+4              0.005088 seconds
+6              0.047818 seconds
+8              0.047651 seconds

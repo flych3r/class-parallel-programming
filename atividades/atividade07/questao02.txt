@@ -1,5 +1,3 @@
-obs: Usei N = 1000 pois era o maior valor potência de 10 com tempo razoável.
-
 # Single
 # Processadores     Tempo
 1                   3.397103 seconds
@@ -7,4 +5,12 @@ obs: Usei N = 1000 pois era o maior valor potência de 10 com tempo razoável.
 4                   0.873382 seconds
 6                   0.586920 seconds
 8                   0.492365 seconds
+
+# Cluster
+# Processadores     Tempo
+1                   3.392870 seconds
+2                   1.707302 seconds
+4                   0.865090 seconds
+6                   0.636682 seconds
+8                   0.520975 seconds
 
