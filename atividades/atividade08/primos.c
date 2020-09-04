@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
     int rank, size;
     int root = 0, tag_chunk = 1, tag_result = 2;
     int *primes = (int *) malloc(sizeof(int) * N + 1);
+    int *chunk = (int *) malloc(sizeof(int) * 2);
+    int p, start, chunk_size, i, j;
     MPI_Request request;
     MPI_Status status;
 
@@ -31,10 +33,9 @@ int main(int argc, char *argv[])
 
     // printf("%d\n", rank);
     if (rank == root) {
-        int p = 0;
-        int chunk[2];
-        int chunk_size = N / (size - 1) + 1;
-        for(int i = 1; i < N; i+=chunk_size)
+        p = 0;
+        chunk_size = N / (size - 1) + 1;
+        for(i = 1; i < N; i+=chunk_size)
         {
             if (i + chunk_size >= N) chunk_size = N - i;
             chunk[0] = i;
@@ -47,13 +48,12 @@ int main(int argc, char *argv[])
             p %= size - 1;
         }
     } else {
-        int chunk[2];
         MPI_Irecv(chunk, 2, MPI_INT, root, tag_chunk, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
-        int start = chunk[0];
-        int chunk_size = chunk[1];
+        start = chunk[0];
+        chunk_size = chunk[1];
         int *primos = (int *) malloc(sizeof(int) * chunk_size + 1);
-        for(int i = 0, j = start; i < chunk_size; i++, j++)
+        for(i = 0, j = start; i < chunk_size; i++, j++)
         {
             primos[i] = primo(j);
             // printf("%d %d\n", j, primos[i]);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     if (rank == root && ECHO)
     {
-        for (int i = 1; i <= N; i++)
+        for (i = 1; i <= N; i++)
         {
             if (primes[i]) printf("%d ", i);
         }
