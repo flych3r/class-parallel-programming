@@ -1,14 +1,13 @@
 # Média entre 5 execuções
+# N = 1e9
 
 # Single
 # Processos    Tempo
-1              0.010385 seconds
-2              0.007887 seconds
-4              0.005380 seconds
-6              0.004224 seconds
-8              0.0240714 seconds
-obs:    Para Single #P = 8, ocorreu variações no tempo de execução
-        O desvio padrão foi 0.03178, com máximo de 0.086872 e mínimo de 0.003213
+1              10.86417 seconds
+2              8.250002 seconds
+4              5.549320 seconds
+6              3.694757 seconds
+8              2.842700 seconds
 
 # Cluster
 # Processos    Tempo
