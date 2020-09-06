@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
             {
                 if (i * N + j < (NN / size))
                     a[i * N + j] = 1.0;
-                b[i * N + j] = 1.0;
+                b[j * N + i] = 1.0;
                 c[i * N + j] = -1.0;
             }
         }
