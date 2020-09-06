@@ -1,18 +1,17 @@
-# Média entre 5 execuções
 # N = 1e9
 
-# Single
+# Single 8 cores
 # Processos    Tempo
-1              10.86417 seconds
+1              10.864171 seconds
 2              8.250002 seconds
 4              5.549320 seconds
 6              3.694757 seconds
 8              2.842700 seconds
 
-# Cluster
+# Cluster 2x 4cores
 # Processos    Tempo
-1              0.010160 seconds
-2              0.007611 seconds
-4              0.005088 seconds
-6              0.047818 seconds
-8              0.047651 seconds
+1              10.114316 seconds
+2              7.451115 seconds
+4              4.913480 seconds
+6              12.277107 seconds
+8              9.958636 seconds
