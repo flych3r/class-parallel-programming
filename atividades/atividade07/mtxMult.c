@@ -43,14 +43,14 @@ int main(int argc, char const *argv[])
     {
         for(int j = 0; j < n; j++)
         {
-            a[i][j] = i%2 ? 5.0 : 1.0 ;
-            b[i][j] = i%2 ? 3.0 : 2.0;
+            a[i][j] = 1.0;
+            b[i][j] = 1.0;
             c[i][j] = 0.0;
         }
     }
 
     mtxMul(c, a, b, n);
-    print_matrix(c, n);
+    // print_matrix(c, n);
 
     for(int i = 0; i < n; i++)
     {

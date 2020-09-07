@@ -3,20 +3,20 @@
 #include <math.h>
 #include <mpi.h>
 
-float *mtxMul_mpi(float *c, float *a, float *b, int n, int size)
+void mtxMul_mpi(int rank, float *c, float *a, float *b, int n, int size)
 {
     float aux;
-    for (int i = 0; i < n / size; i++)
+    int chunk = n / size;
+    for (int ig = chunk * rank, il = 0; ig < chunk * (rank + 1); ig++, il++)
     {
         for (int j = 0; j < n; j++)
         {
             aux = 0.0;
             for (int k = 0; k < n; k++)
-                aux += a[i * n + k] * b[k + n * j];
-            c[i * n + j] = aux;
+                aux += a[ig * n + k] * b[k + n * j];
+            c[il * n + j] = aux;
         }
     }
-    return 0;
 }
 
 void print_matrix_linemajor(float *mtx, int n, int size)
@@ -48,32 +48,31 @@ int main(int argc, char *argv[]) {
     sscanf (argv[1], "%d", &N);
     NN = N * N;
 
-    a = (float *) malloc((NN / size) * sizeof(float));
+    a = (float *) malloc(NN * sizeof(float));
     b = (float *) malloc(NN * sizeof(float));
     c = (float *) malloc(NN * sizeof(float));
+    d = (float *) malloc((NN / size) * sizeof(float));
 
     if (rank == 0) {
         for (i = 0; i < N; i++)
         {
             for (j = 0; j < N; j++)
             {
-                if (i * N + j < (NN / size))
-                    a[i * N + j] = 1.0;
+                a[i * N + j] = 1.0 ;
                 b[j * N + i] = 1.0;
                 c[i * N + j] = -1.0;
             }
         }
     }
 
-    MPI_Bcast(a, NN / size, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(a, NN, MPI_FLOAT, 0, MPI_COMM_WORLD);
     MPI_Bcast(b, NN, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    d = (float *) malloc((NN / size) * sizeof(float));
-    mtxMul_mpi(d, a, b, N, size);
+    mtxMul_mpi(rank, d, a, b, N, size);
 
     MPI_Gather(
         d, NN / size, MPI_FLOAT,
-        c + (NN * rank), NN / size, MPI_FLOAT, 0,
+        c + ((NN / size) * rank), NN / size, MPI_FLOAT, 0,
         MPI_COMM_WORLD
     );
 
