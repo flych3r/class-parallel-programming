@@ -3,8 +3,8 @@
 #include <mpi.h>
 #include <math.h>
 
-#define N 1e6
-#define ECHO 0
+#define N 1e4
+#define ECHO 1
 
 int primo (int n) {
     int i;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     // printf("%d\n", rank);
     if (rank == root) {
         p = 0;
-        chunk_size = N / (size - 1) + 1;
+        chunk_size = (N / (size - 1)) / log10(N) + 1;
         for(i = 1; i < N; i+=chunk_size)
         {
             if (i + chunk_size >= N) chunk_size = N - i;
@@ -47,18 +47,27 @@ int main(int argc, char *argv[])
             p++;
             p %= size - 1;
         }
-    } else {
-        MPI_Irecv(chunk, 2, MPI_INT, root, tag_chunk, MPI_COMM_WORLD, &request);
-        MPI_Wait(&request, &status);
-        start = chunk[0];
-        chunk_size = chunk[1];
-        int *primos = (int *) malloc(sizeof(int) * chunk_size + 1);
-        for(i = 0, j = start; i < chunk_size; i++, j++)
+        for (int p = 1; p < size; p++)
         {
-            primos[i] = primo(j);
-            // printf("%d %d\n", j, primos[i]);
+            chunk[0] = -1;
+            MPI_Isend(chunk, 2, MPI_INT, p, tag_chunk, MPI_COMM_WORLD, &request);
         }
-        MPI_Isend(primos, chunk_size, MPI_INT, root, tag_result, MPI_COMM_WORLD, &request);
+    } else {
+        while(1) {
+            MPI_Irecv(chunk, 2, MPI_INT, root, tag_chunk, MPI_COMM_WORLD, &request);
+            MPI_Wait(&request, &status);
+            // printf("%d %d %d\n", rank, chunk[0], chunk[1]);
+            if (chunk[0] == -1) break;
+            start = chunk[0];
+            chunk_size = chunk[1];
+            int *primos = (int *) malloc(sizeof(int) * chunk_size + 1);
+            for(i = 0, j = start; i < chunk_size; i++, j++)
+            {
+                primos[i] = primo(j);
+                // printf("%d %d\n", j, primos[i]);
+            }
+            MPI_Isend(primos, chunk_size, MPI_INT, root, tag_result, MPI_COMM_WORLD, &request);
+        }
     }
 
     if (rank == root && ECHO)
