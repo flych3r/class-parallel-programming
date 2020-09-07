@@ -71,30 +71,11 @@ int main(int argc, char *argv[]) {
     d = (float *) malloc((NN / size) * sizeof(float));
     mtxMul_mpi(d, a, b, N, size);
 
-    if (rank == 0) {
-        for (i = 0; i < N / size; i++)
-        {
-            for (j = 0; j < N; j++)
-            {
-                c[i * N + j] = d[i * N + j];
-            }
-        }
-        for (source = 1; source < size; source++) {
-            MPI_Recv(d, (NN / size), MPI_FLOAT, source, 0, MPI_COMM_WORLD, &status);
-            int k = source * N * (N / size);
-            for (i = 0; i < N / size; i++)
-            {
-                for (j = 0; j < N; j++)
-                {
-                    c[i * N + j + k] = d[i * N + j];
-                }
-            }
-        }
-    }
-    else
-    {
-        MPI_Send(d, (NN / size), MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-    }
+    MPI_Gather(
+        d, NN / size, MPI_FLOAT,
+        c + (NN * rank), NN / size, MPI_FLOAT, 0,
+        MPI_COMM_WORLD
+    );
 
     MPI_Barrier(MPI_COMM_WORLD);
     finish = MPI_Wtime() - start;
