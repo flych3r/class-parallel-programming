@@ -1,17 +1,17 @@
-# N = 5e3
+# N = 6e3
 
 # Single 8 cores
 # Processadores     Tempo
-1                   425.992343 seconds
-2                   214.176780 seconds
-4                   107.557391 seconds
-6                   71.955511 seconds
-8                   54.351619 seconds
+1                   736.606690 seconds
+2                   368.346622 seconds
+4                   185.530127 seconds
+6                   123.979920 seconds
+8                   93.633481 seconds
 
 # Cluster 2x 4 cores
 # Processadores     Tempo
-1                   423.479081 seconds
-2                   212.423056 seconds
-4                   106.690699 seconds
-6                   72.942247 seconds
-8                   55.279290 seconds
+1                   735.608972 seconds
+2                   368.267291 seconds
+4                   184.752494 seconds
+6                   126.781823 seconds
+8                   96.162258 seconds

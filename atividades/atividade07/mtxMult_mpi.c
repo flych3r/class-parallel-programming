@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
         {
             for (j = 0; j < N; j++)
             {
-                a[i * N + j] = 1.0 ;
-                b[j * N + i] = 1.0;
-                c[i * N + j] = -1.0;
+                a[i * N + j] = i%2 ? 1.0 : 3.0 ;
+                b[j * N + i] = i%2 ? 5.0 : 1.0;
+                c[i * N + j] = 0.0;
             }
         }
     }
@@ -81,9 +81,9 @@ int main(int argc, char *argv[]) {
     MPI_Reduce(&finish, &maxtime, 1, MPI_DOUBLE,MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        printf("With N = %d.\n", N);
-        // print_matrix_linemajor(c, N, 1);
-        printf("Elapsed time for %d: %lf seconds\n", size, maxtime);
+        // printf("With N = %d.\n", N);
+        print_matrix_linemajor(c, N, 1);
+        // printf("Elapsed time for %d: %lf seconds\n", size, maxtime);
     }
 
     free(a);

@@ -42,8 +42,8 @@ int main(int argc, char const *argv[])
     {
         for(int j = 0; j < n; j++)
         {
-            a[i * n + j] = 1.0;
-            b[i * n + j] = 1.0;
+            a[i * n + j] = i%2 ? 1.0 : 3.0;
+            b[j * n + i] = i%2 ? 5.0 : 1.0;
             c[i * n + j] = 0.0;
         }
     }
