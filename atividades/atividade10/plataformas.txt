@@ -1,0 +1,12 @@
+Quantidade de Plataformas: 1
+
+Plataforma[0]: NVIDIA CUDA
+Quantidade de dispositivos NVIDIA CUDA: 1
+=== Dispositivos da Plataforma NVIDIA CUDA: ===
+ -- Dispositivo com id 0 --
+ DEVICE_NAME = GeForce 940MX
+ DEVICE_VENDOR = NVIDIA Corporation
+ DEVICE_MAX_COMPUTE_UNITS = 3
+ CL_DEVICE_MAX_WORK_GROUP_SIZE = 1024
+ CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS = 3
+ CL_DEVICE_MAX_WORK_ITEM_SIZES = 1024, 1024, 64

@@ -1,0 +1,12 @@
+void vectorAdd4(float *vecA, float *vecB, float *vecC, float *vecD, float *res) {
+    int tid = 0;
+    int aux;
+    while (tid < 128) {
+        aux = vecA[tid] + vecB[tid];
+        aux = res[tid] + vecC[tid];
+        aux = res[tid] + vecD[tid];
+        res[tid] = aux;
+
+        tid += 1;
+    }
+}

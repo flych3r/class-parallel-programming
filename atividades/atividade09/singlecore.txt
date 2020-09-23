@@ -1,0 +1,17 @@
+add r2, r0, r0          ; tid
+add r3, r0, r0          ; posição no vetor
+add r4, r0, r0          ; valor para verificação condicional
+
+L1:
+lfp f1, r3(vecA)    ; carrega o valor de vectorA na posição armazenada em r3
+    lfp f2, r3(vecB)    ; carrega o valor de vectorB na posição armazenada em r3
+    addf f1, f1, f2     ; adiciona os elementos adjacentes dos vetores vectorA e vectorB
+    lfp f2, r3(vecC)    ; carrega o valor de vectorC na posição armazenada em r3
+    addf f1, f1, f2     ; adiciona o resultado da soma anterior armazenado em f1 ao elemento de vectorC
+    lfp f2, r3(vecD)    ; carrega o valor de vectorC na posição armazenada em r3
+    addf f1, f1, f2     ; adiciona o resultado da soma anterior armazenado em f1 ao elemento de vectorD
+    sfp f1, r3(res)     ; armazena o total da soma no vetor res na poscição armazenada em r3
+    addi r3, r3, #4     ; incrementa o valor armazenado em r3 no tamanho de 1 inteiro em bytes
+    addi r2, r2, #1     ; incrementa o valor armazenado em r2 em 1
+    slti r4, r2, #128      ; compara se o valor armazenado em r2 é menor que o valor armazenado em r8 e armazena em r4
+    bne r4, L1          ; retorna a instrução L1 se o valor armazenado em r4 é verdadeiro
