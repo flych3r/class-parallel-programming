@@ -5,57 +5,64 @@
 #include <math.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <CL/cl.h>
 
 /* Só para saber se estou no Linux ou Windows. */
 #ifdef __linux__
 #define LINUX 1
 #define WINDOWS 0
-#elif _WIN32
+#elif  _WIN32
 #define LINUX 0
 #define WINDOWS 1
 #endif
 
+
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define CL_TARGET_OPENCL_VERSION 200
+#include <CL/cl.h>
 
 cl_int status;
-cl_int ciErr;
-cl_platform_id * platforms = NULL;
+cl_platform_id *platforms = NULL;
 cl_platform_id platform;
 cl_uint numPlatforms = 0;
-cl_device_id * devices = NULL;
+cl_device_id* devices = NULL;
 cl_uint numDevices = 0;
 char buffer[1000000];
 cl_uint buf_uint;
 cl_ulong buf_ulong;
 size_t buf_sizet;
+// Dimensão da Matriz
+cl_int N = 3584 / 8;
 
-// Number of partirions for integral
-cl_int iNumElements = 1e8 + 1;
-const cl_int LOCAL = 256;
-const cl_int GLOBAL = 512;
+const char * FILENAME = "TransposeMatrix.cl";
+const char * PROGRAM_NAME = "TransposeMatrix";
 
-const char * FILENAME = "PiIntegralRienmann.cl";
-const char * PROGRAM_NAME = "PiIntegralRienmann";
+// Ponteiros para as Matrizes na Memória da CPU
+cl_float* srcA;
+// cl_float* srcB;
+cl_float* srcC;
 
-cl_double * srcA;
-// cl_double* srcB;
-cl_double * srcC;
-cl_double result;
+// result é a soma de todos os elementos da matriz resultante.
+// Como a matriz é muito grande, não dá para exibir na tela.
+// Usamos result para depurar.
+cl_double resultA;
+cl_double resultC;
+cl_char * result;
 
-FILE * programHandle; // Arquivo com funções kernel
+const cl_bool MTX_TO_FILE = 1;
+
+FILE* programHandle; // Arquivo com funções kernel
 size_t programSize;
-char * programBuffer;
+char* programBuffer;
 cl_program cpProgram; // Programa OpenCL
-cl_kernel ckKernel; // Kernel OpenCL
+cl_kernel ckKernel;   // Kernel OpenCL
 
-size_t szGlobalWorkSize; // global work size
-size_t szLocalWorkSize; // local work size
+size_t szGlobalWorkSize; // global work size - quantidade de work-items
+size_t szLocalWorkSize; // local work size - quantidade de work-items por work-groups
 
 // Função Main
 // ***************************************************************************************
-int main(int argc, char * argv[]) {
+int main (int argc, char *argv[]) {
+
     // Verificar se são 2 parâmetros.
     if (argc != 3) {
         printf("Forneça dois parâmetros:\n");
@@ -67,7 +74,7 @@ int main(int argc, char * argv[]) {
 
     // Qual plataforma o usuário deseja utiliza?
     char chosenPlatform[100];
-    if (!strcmp(argv[1], "NVIDIA") || !strcmp(argv[1], "INTEL") || !strcmp(argv[1], "AMD")) {
+    if (!strcmp(argv[1], "NVIDIA") || !strcmp(argv[1], "INTEL") || !strcmp(argv[1], "AMD") ) {
         strcpy(chosenPlatform, argv[1]);
     } else {
         printf("Plataforma Inválida.\n");
@@ -85,30 +92,37 @@ int main(int argc, char * argv[]) {
     printf("Plataforma em procura: %s, Dispositivo em procura: %s.\n\n", chosenPlatform, chosenDevice);
 
     // Configurar as dimensões de trabalho Global e Local
-    szLocalWorkSize = LOCAL;
-    szGlobalWorkSize = GLOBAL * LOCAL;
+    // iWI é a dimensão do work-group (16 * 16 work-items)
+    const cl_int iWI = 16;
+    const size_t szLocalWorkSize[2] = {iWI, iWI};
+    const size_t szGlobalWorkSize[2] = {N, N};
 
-    // Alocar arrays no host
-    srcA = (cl_double * ) malloc(sizeof(cl_double) * iNumElements);
-    // srcB = (cl_double *) malloc(sizeof(cl_double) * iNumElements);
-    srcC = (cl_double * ) malloc(sizeof(cl_double) * szGlobalWorkSize / szLocalWorkSize);
 
-    // Inicializar os arrays
-    for (int i = 0; i < iNumElements; i++) {
-        *(srcA + i) = (double) i;
-        // *(srcB + i) = i;
-    }
+    // Alocar matrizes no host
+    srcA = (cl_float *) malloc(sizeof(cl_float) * N * N);
+    // srcB = (cl_float *) malloc(sizeof(cl_float) * N * N);
+    srcC = (cl_float *) malloc(sizeof(cl_float) * N * N);
+
+    // Inicializa as matrizes, com elementos iguais a 1.0
+    // A matriz C resultante deve ter todos os elementos iguais a N.
+    // A soma dos elementos de C deve ser N * N * N
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++) {
+            srcA[i * N + j] = i;
+            // srcB[i * N + j] = 1.0;
+        }
+
 
     // ***************************************************************************************
     // Etapa 0: definir a plataforma
     // ***************************************************************************************
-    status = clGetPlatformIDs(0, 0, & numPlatforms);
+    status = clGetPlatformIDs(0, 0, &numPlatforms);
     if (status != CL_SUCCESS) {
         printf("Erro: Falha ao recuperar a quantidade de plataformas.\n");
         return EXIT_FAILURE;
     }
 
-    platforms = (cl_platform_id * ) malloc(numPlatforms * sizeof(cl_platform_id));
+    platforms = (cl_platform_id *) malloc(numPlatforms * sizeof(cl_platform_id));
 
     status = clGetPlatformIDs(numPlatforms, platforms, 0);
     if (status != CL_SUCCESS) {
@@ -120,15 +134,15 @@ int main(int argc, char * argv[]) {
     int matchPlatform = 0;
     for (cl_int i = 0; i < numPlatforms; i++) {
         size_t lengthNamePlatform;
-        char * namePlatform;
+        char *namePlatform;
 
-        status = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, 0, & lengthNamePlatform);
+        status = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, 0, &lengthNamePlatform);
         if (status != CL_SUCCESS) {
             printf("Erro: Falha ao recuperar o tamanho do nome da plataforma.\n");
             return EXIT_FAILURE;
         }
 
-        namePlatform = (char * ) malloc(lengthNamePlatform * sizeof(char));
+        namePlatform = (char *) malloc(lengthNamePlatform * sizeof(char));
 
         status = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, lengthNamePlatform, namePlatform, 0);
         if (status != CL_SUCCESS) {
@@ -167,15 +181,16 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 
+
     // ***************************************************************************************
     // Etapa 1: descobrir e inicializar os dispositivos
     // ***************************************************************************************
 
     // Caso a opção fosse executar na CPU:
-    if (!strcmp(chosenDevice, "CPU")) {
-        status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 0, NULL, & numDevices);
+    if (!strcmp(chosenDevice,"CPU")) {
+        status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 0, NULL, &numDevices);
     } else {
-        status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 0, NULL, & numDevices);
+        status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);
     }
 
     if (status != CL_SUCCESS) {
@@ -190,12 +205,12 @@ int main(int argc, char * argv[]) {
     printf("Quantidade de Dispositivos = %d\n", numDevices);
 
     // Alocar espaço suficiente para cada dispositivo.
-    devices = (cl_device_id * ) malloc(numDevices * sizeof(cl_device_id));
+    devices = (cl_device_id*) malloc(numDevices * sizeof(cl_device_id));
 
     // Preencher com informações dos dispositivos - Mesma função, parâmetros diferentes!!!
     // Caso a opção fosse executar na CPU:
     // status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numDevices, devices, NULL);
-    if (!strcmp(chosenDevice, "CPU")) {
+    if (!strcmp(chosenDevice,"CPU")) {
         status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numDevices, devices, NULL);
     } else {
         status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numDevices, devices, NULL);
@@ -212,7 +227,7 @@ int main(int argc, char * argv[]) {
     cl_context context = NULL;
 
     // Criar um contexto e associá-lo aos dispositivos.
-    context = clCreateContext(NULL, numDevices, devices, NULL, NULL, & status);
+    context = clCreateContext(NULL, numDevices, devices, NULL, NULL, &status);
 
     if (!context) {
         printf("Erro: Falha ao criar contexto de computação!\n");
@@ -226,7 +241,7 @@ int main(int argc, char * argv[]) {
     cl_command_queue cmdQueue;
 
     // Criar uma fila e associá-la ao dispositivo. O dispositivo 1 deve ser a GPU.
-    cmdQueue = clCreateCommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE, & status);
+    cmdQueue = clCreateCommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE, &status);
 
     if (!cmdQueue) {
         printf("Erro: falha a criar uma fila de comandos!\n");
@@ -238,7 +253,7 @@ int main(int argc, char * argv[]) {
     // ***************************************************************************************
 
     // 4.a: Ler o kernel OpenCL do arquivo e recuperar seu tamanho.
-    if (WINDOWS) fopen_s(&programHandle, FILENAME, "r");             // Alterei para fopen_s
+    // if (WINDOWS) fopen_s(&programHandle, FILENAME, "r");             // Alterei para fopen_s
     if (LINUX) programHandle = fopen(FILENAME, "r");
     fseek(programHandle, 0, SEEK_END);
     programSize = ftell(programHandle);
@@ -246,14 +261,14 @@ int main(int argc, char * argv[]) {
     printf("Tamanho do programa = %zu B\n", programSize);
 
     // 4.b: Leia o código do kernel no buffer apropriado e marque seu final.
-    programBuffer = (char * ) malloc(programSize + 1);
-    memset(programBuffer, ' ', programSize); // ATENÇÃo: o código do livro não tem esse trecho!
+    programBuffer = (char*) malloc(programSize + 1);
+    memset(programBuffer, ' ', programSize);                        // ATENÇÃO: o código do livro não tem esse trecho!
     fread(programBuffer, sizeof(char), programSize, programHandle); // Leio primeiro.
-    programBuffer[programSize] = '\0'; // Marco o final.
+    programBuffer[programSize] = '\0';                              // Marco o final.
     fclose(programHandle);
 
     // 4.c: Criar o programa a partir da fonte.
-    cpProgram = clCreateProgramWithSource(context, 1, (const char ** ) & programBuffer, & programSize, & ciErr);
+    cpProgram = clCreateProgramWithSource(context, 1, (const char**)&programBuffer, &programSize, &status);
     if (!cpProgram) {
         printf("Erro: falha ao criar o programa de computação!\n");
         return EXIT_FAILURE;
@@ -263,13 +278,13 @@ int main(int argc, char * argv[]) {
     // ***************************************************************************************
     // Etapa 5: Compilar o Programa
     // ***************************************************************************************
-    ciErr = clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
-    if (ciErr != CL_SUCCESS) {
+    status = clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
+    if (status != CL_SUCCESS) {
         size_t len;
         char buffer[2048];
 
         printf("Erro: Falha ao construir o executável!\n");
-        clGetProgramBuildInfo(cpProgram, devices[1], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, & len);
+        clGetProgramBuildInfo(cpProgram, devices[0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
         printf("%s\n", buffer);
         exit(1);
     }
@@ -278,34 +293,21 @@ int main(int argc, char * argv[]) {
     // Etapa 6: Criar os buffers no dispositivo - Aqui pode mudar de acordo com o kernel.
     // ***************************************************************************************
 
-    cl_mem bufferA; // Array de entrada no dispositivo
-    // cl_mem bufferB; // Array de entrada no dispositivo
-    cl_mem bufferC; // Array de saída no dispositivo
+    cl_mem bufferA; // Matriz de entrada no dispositivo
+    // cl_mem bufferB; // Matriz de entrada no dispositivo
+    cl_mem bufferC; // Matriz de saída no dispositivo
 
-    // Tamanho dos dados
-    size_t datasize = sizeof(cl_double) * iNumElements;
-    size_t datasize_c = sizeof(cl_double) * (szGlobalWorkSize / szLocalWorkSize);
+    // Tamanho dos dados, o mesmo para todas as matrizes.
+    size_t datasize = sizeof(cl_float) * N * N;
 
     // Aqui você está fazendo "malloc" no dispositivo
-    bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, datasize, NULL, & status);
-    if (status != CL_SUCCESS) {
-        printf("Erro ao alocar vetor A no dispositivo.\n");
-        exit(1);
-    }
+    bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, datasize, NULL, &status);
 
-    // // Aqui você está fazendo "malloc" no dispositivo
+    // Aqui você está fazendo "malloc" no dispositivo
     // bufferB = clCreateBuffer(context, CL_MEM_READ_ONLY, datasize, NULL, &status);
-    // if (status != CL_SUCCESS) {
-    //   printf("Erro ao alocar vetor B no dispositivo.\n");
-    //   exit(1);
-    // }
 
     // Aqui você está fazendo "malloc" no dispositivo
-    bufferC = clCreateBuffer(context, CL_MEM_READ_WRITE, datasize_c, NULL, & status);
-    if (status != CL_SUCCESS) {
-        printf("Erro ao alocar vetor C no dispositivo.\n");
-        exit(1);
-    }
+    bufferC = clCreateBuffer(context, CL_MEM_READ_WRITE, datasize, NULL, &status);
 
     // ***************************************************************************************
     // Etapa 7: Escrever dados do host para o dispositivo
@@ -318,8 +320,8 @@ int main(int argc, char * argv[]) {
     // Etapa 8: Criar o kernel a partir do código compilado
     // ***************************************************************************************
 
-    ckKernel = clCreateKernel(cpProgram, PROGRAM_NAME, & ciErr);
-    if (!ckKernel || ciErr != CL_SUCCESS) {
+    ckKernel = clCreateKernel(cpProgram, PROGRAM_NAME, &status);
+    if (!ckKernel || status != CL_SUCCESS) {
         printf("Erro: Falha ao criar o kernel!\n");
         exit(1);
     }
@@ -328,15 +330,12 @@ int main(int argc, char * argv[]) {
     // Etapa 9: Configure os argumentos do kernel
     // ***************************************************************************************
 
-    ciErr = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void * ) & bufferA);
-    // ciErr |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void*)&bufferB);
-    ciErr |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void * ) & bufferC);
-    ciErr |= clSetKernelArg(ckKernel, 2, sizeof(double) * szLocalWorkSize, NULL);
-    ciErr |= clSetKernelArg(ckKernel, 3, sizeof(cl_int), (void * ) & iNumElements);
-
-    if (ciErr != CL_SUCCESS) {
-        printf("Erro ao configurar os argumentos do Kernel.\n");
-        exit(1);
+    status = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void*)&bufferA);
+    // status |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void*)&bufferB);
+    status |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void*)&bufferC);
+    status |= clSetKernelArg(ckKernel, 2, sizeof(cl_int), (void*)&N);
+    if (status != CL_SUCCESS){
+        printf("Erro ao configurar os parâmetros do Kernel.\n");
     }
 
     // ***************************************************************************************
@@ -344,15 +343,14 @@ int main(int argc, char * argv[]) {
     // ***************************************************************************************
 
     cl_event kernelEvent;
-    ciErr = clEnqueueNDRangeKernel(cmdQueue, ckKernel, 1, NULL, & szGlobalWorkSize, & szLocalWorkSize, 0, NULL, & kernelEvent);
-    if (ciErr != CL_SUCCESS) {
+    status = clEnqueueNDRangeKernel(cmdQueue, ckKernel, 2, NULL, szGlobalWorkSize, szLocalWorkSize, 0, NULL, &kernelEvent);
+    if (status != CL_SUCCESS) {
         printf("Erro lançando o kernel!\n");
-        exit(1);
     }
 
     // Aguarda a execução.
-    ciErr = clWaitForEvents(1, & kernelEvent);
-    if (ciErr != CL_SUCCESS) {
+    status = clWaitForEvents(1, &kernelEvent);
+    if (status != CL_SUCCESS) {
         printf("Erro na execução do Kernel.\n");
         exit(1);
     }
@@ -360,77 +358,52 @@ int main(int argc, char * argv[]) {
     unsigned long start = 0;
     unsigned long end = 0;
 
-    clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), & start, NULL);
-    clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), & end, NULL);
-    double duration = (end - start) * 10e-9;
+    clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+    clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+    float duration = (end - start) * 10e-9;
 
     clReleaseEvent(kernelEvent);
     printf("Tempo de Execução do Kernel = %f s\n", duration);
 
+
+    // Aguarda a execução.
     clFinish(cmdQueue);
+
     // ***************************************************************************************
     // Etapa 11: Ler o resultado de volta para o host
     // ***************************************************************************************
-
-    ciErr = clEnqueueReadBuffer(cmdQueue, bufferC, CL_TRUE, 0, datasize_c, srcC, 0, NULL, NULL);
-    if (ciErr != CL_SUCCESS) {
-        printf("Erro ao recuperar o vetor C.\n");
-        switch (ciErr) {
-        case CL_INVALID_COMMAND_QUEUE:
-            printf("CL_INVALID_COMMAND_QUEUE\n");
-            break;
-        case CL_INVALID_CONTEXT:
-            printf("CL_INVALID_CONTEXT\n");
-            break;
-        case CL_INVALID_MEM_OBJECT:
-            printf("CL_INVALID_MEM_OBJECT\n");
-            break;
-        case CL_INVALID_VALUE:
-            printf("CL_INVALID_VALUE\n");
-            break;
-        case CL_INVALID_EVENT_WAIT_LIST:
-            printf("CL_INVALID_EVENT_WAIT_LIST\n");
-            break;
-        case CL_MISALIGNED_SUB_BUFFER_OFFSET:
-            printf("CL_MISALIGNED_SUB_BUFFER_OFFSET\n");
-            break;
-        case CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST:
-            printf("CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST\n");
-            break;
-        case CL_MEM_OBJECT_ALLOCATION_FAILURE:
-            printf("CL_MEM_OBJECT_ALLOCATION_FAILURE");
-            break;
-        case CL_INVALID_OPERATION:
-            printf("CL_INVALID_OPERATION\n");
-            break;
-        case CL_OUT_OF_RESOURCES:
-            printf("CL_OUT_OF_RESOURCES\n");
-            break;
-        case CL_OUT_OF_HOST_MEMORY:
-            printf("CL_OUT_OF_HOST_MEMORY\n");
-            break;
-        default:
-            printf("Nenhum valor?\n");
-            break;
-        }
-        exit(1);
-    }
+    status = clEnqueueReadBuffer(cmdQueue, bufferC, CL_TRUE, 0, datasize, srcC, 0, NULL, NULL);
 
     // Aguarda a cópia
     clFinish(cmdQueue);
 
     // Verifica o resultado
-    result = 0.0;
-    int i;
-    for (i = 0; i < (szGlobalWorkSize / szLocalWorkSize); i++) {
-        result += srcC[i];
-    }
-    result *= 4;
+    // A soma dos elementos de C deve ser N * N * N se as matrizes tiverem todos elementos em 1.0
 
-    printf("iNumElements         : %d\n", iNumElements);
-    printf("2 * iNumElements     : %d\n", 2 * iNumElements);
-    printf("szGlobalWorkSize     : %zd\n", szGlobalWorkSize);
-    printf("Result               : %.18lf\n", result);
+    if (MTX_TO_FILE) {
+        FILE *orig, *transposed;
+        orig = fopen("orig.txt", "w");
+        transposed = fopen("transposed.txt", "w");
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < N; j++) {
+                fprintf(orig, "%.2f ", srcA[i * N + j]);
+                fprintf(transposed, "%.2f ", srcC[i * N + j]);
+            }
+            fprintf(orig, "\n");
+            fprintf(transposed, "\n");
+        }
+        fclose(orig);
+        fclose(transposed);
+    }
+
+    resultA = resultC = 0.0;
+    for (int i = 0; i < N * N; i++) {
+        resultA += srcA[i];
+        resultC += srcC[i];
+    }
+    result = resultA == resultC ? "Correct!" : "Wrong!";
+    // printf("N * N * N = %ld\n", (long)N * N * N);
+    printf("Result = %s \n", result);
 
     // Limpar
     free(srcA);
