@@ -32,15 +32,15 @@ cl_ulong buf_ulong;
 size_t buf_sizet;
 const cl_int LOCAL = 256;
 const cl_int GLOBAL = 512;
-cl_int iNumElements = 1e6 + 1;
+cl_int iNumElements = 1e8 + 1;
 
 const char * FILENAME = "PiIntegralRienmann.cl";
 const char * PROGRAM_NAME = "PiIntegralRienmann";
 
-cl_float * srcA;
-// cl_float* srcB;
-cl_float * srcC;
-cl_float result;
+cl_double * srcA;
+// cl_double* srcB;
+cl_double * srcC;
+cl_double result;
 
 FILE * programHandle; // Arquivo com funções kernel
 size_t programSize;
@@ -87,13 +87,13 @@ int main(int argc, char * argv[]) {
     szGlobalWorkSize = GLOBAL * LOCAL;
 
     // Alocar arrays no host
-    srcA = (cl_float * ) malloc(sizeof(cl_float) * iNumElements);
-    // srcB = (cl_float *) malloc(sizeof(cl_float) * iNumElements);
-    srcC = (cl_float * ) malloc(sizeof(cl_float) * szGlobalWorkSize / szLocalWorkSize);
+    srcA = (cl_double * ) malloc(sizeof(cl_double) * iNumElements);
+    // srcB = (cl_double *) malloc(sizeof(cl_double) * iNumElements);
+    srcC = (cl_double * ) malloc(sizeof(cl_double) * szGlobalWorkSize / szLocalWorkSize);
 
     // Inicializar os arrays
     for (int i = 0; i < iNumElements; i++) {
-        *(srcA + i) = (float) i;
+        *(srcA + i) = (double) i;
         // *(srcB + i) = i;
     }
 
@@ -281,8 +281,8 @@ int main(int argc, char * argv[]) {
     cl_mem bufferC; // Array de saída no dispositivo
 
     // Tamanho dos dados
-    size_t datasize = sizeof(cl_float) * iNumElements;
-    size_t datasize_c = sizeof(cl_float) * (szGlobalWorkSize / szLocalWorkSize);
+    size_t datasize = sizeof(cl_double) * iNumElements;
+    size_t datasize_c = sizeof(cl_double) * (szGlobalWorkSize / szLocalWorkSize);
 
     // Aqui você está fazendo "malloc" no dispositivo
     bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, datasize, NULL, & status);
@@ -329,7 +329,7 @@ int main(int argc, char * argv[]) {
     ciErr = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void * ) & bufferA);
     // ciErr |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void*)&bufferB);
     ciErr |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void * ) & bufferC);
-    ciErr |= clSetKernelArg(ckKernel, 2, sizeof(float) * szLocalWorkSize, NULL);
+    ciErr |= clSetKernelArg(ckKernel, 2, sizeof(double) * szLocalWorkSize, NULL);
     ciErr |= clSetKernelArg(ckKernel, 3, sizeof(cl_int), (void * ) & iNumElements);
 
     if (ciErr != CL_SUCCESS) {
@@ -360,7 +360,7 @@ int main(int argc, char * argv[]) {
 
     clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), & start, NULL);
     clGetEventProfilingInfo(kernelEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), & end, NULL);
-    float duration = (end - start) * 10e-9;
+    double duration = (end - start) * 10e-9;
 
     clReleaseEvent(kernelEvent);
     printf("Tempo de Execução do Kernel = %f s\n", duration);

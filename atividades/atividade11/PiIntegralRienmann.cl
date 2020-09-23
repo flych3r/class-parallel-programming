@@ -1,8 +1,8 @@
 __kernel void PiIntegralRienmann(
-    __global float* a,
-    // __global float* b,
-    __global float* c,
-    __local float* ProductsWG,
+    __global double* a,
+    // __global double* b,
+    __global double* c,
+    __local double* ProductsWG,
     int iNumElements
 ) {
     // Recuperar o índice global
@@ -17,9 +17,9 @@ __kernel void PiIntegralRienmann(
     // Recuperar o tamanho do grupo
     int iWGS = get_local_size(0);
 
-    float x, fx, temp = 0.0, dx = 1.0 / (iNumElements - 1);
+    double x, fx, temp = 0.0, dx = 1.0 / (iNumElements - 1);
     while (iGID < iNumElements) {
-        // temp += a[iGID];
+        // temp += a[iGID] * b[iGID];
 
         x =  a[iGID] * dx;
         fx = sqrt(1.0 - x * x);
