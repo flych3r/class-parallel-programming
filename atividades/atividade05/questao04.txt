@@ -1,3 +1,4 @@
+# Nota: 0,2 - resultados não correspondem ao uso das diretivas pedidas na questão.
 # Core i7-7500U
 # Processos    Tempo
 1              0.023246 seconds

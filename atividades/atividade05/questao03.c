@@ -1,3 +1,4 @@
+// Nota: 0,3. A questão pede MPI_Send/MPI_Recv
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -78,6 +79,7 @@ int main(int argc, char *argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     finish = MPI_Wtime() - start;
 
+    // A questão pede o uso de MPI_Send/MPI_Recv
     MPI_Reduce(&finish, &maxtime, 1, MPI_DOUBLE,MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
