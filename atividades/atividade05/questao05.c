@@ -1,7 +1,8 @@
+// Nota 0,5
 #include <stdio.h>
 #include <mpi.h>
 
-#define ECHO 0
+#define ECHO 1
 
 int main(int argc, char *argv[]) {
     int rank, size, source, destination, N, tag=0;
