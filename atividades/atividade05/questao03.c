@@ -1,4 +1,4 @@
-// Nota: 0,3. A questão pede MPI_Send/MPI_Recv
+// Nota: 0,5. A questão pede MPI_Send/MPI_Recv, mas a nota foi corrigida depois de averiguação.
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
