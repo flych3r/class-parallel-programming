@@ -1,3 +1,4 @@
+// Nota 1,0
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -65,6 +66,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Era para distribuir A por linha.
     MPI_Bcast(a, NN, MPI_FLOAT, 0, MPI_COMM_WORLD);
     MPI_Bcast(b, NN, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
