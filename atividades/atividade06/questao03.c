@@ -1,3 +1,4 @@
+// Nota 0,3
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -45,9 +46,11 @@ int main(int argc, char *argv[]) {
 
     }
 
+    // Você está copiando os vetores por completo? Não seria uma Scatter?
     MPI_Bcast(v1, N, MPI_FLOAT, 0, MPI_COMM_WORLD);
     MPI_Bcast(v2, N, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
+    // Cada processo calcula o valor do produto escalar completo?
     local_scalar_prod = scalarProduct(v1, v2, N);
 
     MPI_Reduce(
