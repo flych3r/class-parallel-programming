@@ -1,3 +1,4 @@
+// Nota 1,5
 #include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
