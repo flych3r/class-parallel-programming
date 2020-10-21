@@ -1,3 +1,6 @@
+# Correção: Sua solução funciona, mas a instrução lcn não está presente no exemplo
+# do livro que deve ser usado como base. Nota: 1,0
+
 # Supondo que a operação lcn carrega o numero do core no registrador
 # por exemplo, para a máquina de 2 cores:
 #   se a instrução está sendo executada no core 0, após lcn r5

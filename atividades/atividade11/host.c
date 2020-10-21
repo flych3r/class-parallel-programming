@@ -1,3 +1,5 @@
+// Correção: OK. Nota: 2,5
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

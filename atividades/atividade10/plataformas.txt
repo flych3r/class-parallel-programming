@@ -1,3 +1,4 @@
+# Correcão: OK. Nota 2,5
 Quantidade de Plataformas: 1
 
 Plataforma[0]: NVIDIA CUDA
